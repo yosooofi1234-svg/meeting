@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>رد واتساب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: one phone column — input card (text or screenshot), options, then reply cards with copy / WhatsApp */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --line:#d9dee4; --fg:#151a20; --muted:#5d6874;
+  --accent:#0f6e6a; --accent-fg:#ffffff; --accent-soft:#dff0ee;
+  --wa:#1f8a4c; --wa-soft:#e2f4e9; --err:#b91c1c; --err-soft:#fde8e8;
+  --f-ar:"IBM Plex Sans Arabic",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1316; --surface:#171d21; --line:#283139; --fg:#e7ecef; --muted:#93a0aa;
+  --accent:#3fb8ae; --accent-fg:#06201e; --accent-soft:#16302e;
+  --wa:#4ade80; --wa-soft:#15291d; --err:#f87171; --err-soft:#3a1a1a; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 var(--f-ar);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px 0}
+h1{font-size:18px;font-weight:600;margin:0}
+a{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.tabs{display:flex;gap:6px;background:var(--bg);border-radius:10px;padding:4px}
+.tabs button{flex:1;border:0;background:transparent;padding:8px;border-radius:8px;font-weight:500;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+button{font:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;background:var(--surface);color:var(--fg)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.55}
+label{font-size:13px;color:var(--muted)}
+textarea,input[type=text],input[type=tel]{width:100%;font:inherit;padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+textarea{min-height:88px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:4px}
+.pick{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:18px;color:var(--muted);text-align:center;cursor:pointer}
+.pick img{max-width:100%;max-height:260px;border-radius:8px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.context{font-size:13px;color:var(--muted);background:var(--accent-soft);border-radius:10px;padding:8px 10px;margin:0}
+.reply{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.reply .tag{font-size:11.5px;color:var(--muted)}
+.reply p{margin:0;font-size:16px;white-space:pre-wrap}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button,.acts a{font-size:13px;padding:7px 12px}
+.acts a{display:inline-flex;align-items:center;border-radius:10px;text-decoration:none;background:var(--wa-soft);color:var(--wa);border:1px solid transparent;font-weight:500}
+.err{background:var(--err-soft);color:var(--err);border-radius:10px;padding:9px 11px;font-size:14px;margin:0}
+details summary{cursor:pointer;font-weight:500}
+details[open] summary{margin-bottom:8px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px}
+.refine{display:flex;gap:6px}
+.refine input{flex:1;min-width:0;font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.refine button{font-size:13px;padding:7px 12px}
+.quick-edits{display:flex;gap:6px;flex-wrap:wrap}
+.quick-edits button{font-size:12px;padding:4px 10px;border-radius:999px;color:var(--muted)}
+.meaning{font-size:13px;color:var(--muted);background:var(--bg);border-radius:8px;padding:7px 9px;margin:0}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>رد واتساب</h1>
+    <a href="./">مترجم الاجتماع</a>
+  </header>
+
+  <section class="card">
+    <div class="tabs" role="tablist">
+      <button id="tabShot" role="tab" aria-selected="true">صورة شاشة</button>
+      <button id="tabText" role="tab" aria-selected="false">نسخ الرسالة</button>
+    </div>
+
+    <div id="paneShot">
+      <label class="pick" id="pick" for="file">
+        <span id="pickText">اضغط واختر صورة شاشة المحادثة</span>
+        <img id="preview" alt="صورة المحادثة" hidden>
+      </label>
+      <input id="file" type="file" accept="image/*" hidden>
+    </div>
+
+    <div id="paneText" class="field" hidden>
+      <label for="msg">الرسالة اللي جاتك</label>
+      <textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="who">ترد على مين؟ (اختياري)</label>
+      <input id="who" type="text" placeholder="مثل: أبو فهد، أو آخر رسالة">
+    </div>
+    <div class="field">
+      <label for="idea">وش تبي تقول؟ (اختياري)</label>
+      <input id="idea" type="text" placeholder="مثل: قل له أغطيها، أو اعتذر بلطف">
+    </div>
+    <div class="field">
+      <label for="phone">رقمه، لو المحادثة خاصة (اختياري)</label>
+      <input id="phone" type="tel" dir="ltr" placeholder="05XXXXXXXX">
+    </div>
+
+    <div class="field">
+      <span style="font-size:13px;color:var(--muted)">لغة الرد</span>
+      <div class="tabs" role="radiogroup" id="langs">
+        <button data-lang="auto" aria-selected="true">نفس لغة الرسالة</button>
+        <button data-lang="ar" aria-selected="false">عربي</button>
+        <button data-lang="en" aria-selected="false">English</button>
+      </div>
+    </div>
+
+    <button id="go" class="primary">اكتب لي الرد بأسلوبي</button>
+  </section>
+
+  <div id="out" style="display:flex;flex-direction:column;gap:10px"></div>
+
+  <details class="card" id="styleBox">
+    <summary>أسلوبي في الكتابة</summary>
+    <div class="field">
+      <label for="samples">الصق هنا 10 إلى 15 رسالة كتبتها أنت، كل رسالة في سطر</label>
+      <textarea id="samples" style="min-height:140px" placeholder="أبشر يا أبو خالد، تم&#10;الله يعطيك العافية، بشوفها وأرد عليك&#10;..."></textarea>
+    </div>
+    <div class="field">
+      <label for="notes">ملاحظات عن أسلوبك (اختياري)</label>
+      <input id="notes" type="text" placeholder="مثل: أحب الردود القصيرة، وأستخدم 👍">
+    </div>
+    <button id="saveStyle">احفظ أسلوبي</button>
+    <p class="hint">يتحفظ في جوالك بس. وكل ما كانت النماذج أكثر، طلعت الردود أقرب لك.</p>
+  </details>
+</main>
+<div id="toast" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('mt_'+k); return v===null? d : v }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem('mt_'+k, v) }catch(e){} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2200) }
+
+/* ---------- Tabs ---------- */
+let mode = 'shot';
+function setMode(m){
+  mode = m;
+  $('tabShot').setAttribute('aria-selected', m === 'shot');
+  $('tabText').setAttribute('aria-selected', m === 'text');
+  $('paneShot').hidden = m !== 'shot';
+  $('paneText').hidden = m !== 'text';
+}
+$('tabShot').onclick = () => setMode('shot');
+$('tabText').onclick = () => setMode('text');
+
+/* ---------- Reply language ---------- */
+let lang = store.get('wa_lang', 'auto');
+function setLang(l){
+  lang = l; store.set('wa_lang', l);
+  document.querySelectorAll('#langs button').forEach(b => b.setAttribute('aria-selected', b.dataset.lang === l));
+}
+document.querySelectorAll('#langs button').forEach(b => b.onclick = () => setLang(b.dataset.lang));
+setLang(lang);
+
+/* ---------- Screenshot: shrink before sending ---------- */
+let imageData = null;
+$('file').onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const max = 1400, s = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    imageData = c.toDataURL('image/jpeg', 0.85);
+    $('preview').src = imageData; $('preview').hidden = false; $('pickText').textContent = 'اضغط لتغيير الصورة';
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+};
+
+/* ---------- Style ---------- */
+$('samples').value = store.get('wa_samples', '');
+$('notes').value = store.get('wa_notes', '');
+if(!store.get('wa_samples', '')) $('styleBox').open = true;
+$('saveStyle').onclick = () => { store.set('wa_samples', $('samples').value.trim()); store.set('wa_notes', $('notes').value.trim()); toast('انحفظ أسلوبك') };
+$('phone').value = '';
+
+/* ---------- WhatsApp link ---------- */
+function waNumber(p){
+  let d = (p || '').replace(/\D/g, '');
+  if(!d) return '';
+  if(d.startsWith('00')) d = d.slice(2);
+  if(d.startsWith('05') && d.length === 10) d = '966' + d.slice(1);
+  else if(d.startsWith('5') && d.length === 9) d = '966' + d;
+  return d;
+}
+const waLink = (text, phone) => 'https://wa.me/' + waNumber(phone) + '?text=' + encodeURIComponent(text);
+
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); toast('انسخ الرد') }
+  catch(e){
+    const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); toast('انسخ الرد') }catch(_){ toast('حدد النص وانسخه بنفسك') }
+    t.remove();
+  }
+}
+
+/* ---------- Ask OpenAI ---------- */
+function friendly(status, body){
+  if(status === 401) return 'مفتاح OpenAI غلط أو مو محفوظ. افتح مترجم الاجتماع ← الإعدادات وتأكد منه.';
+  if(status === 429 || /quota|billing/i.test(body)) return 'رصيد OpenAI خلص أو الطلبات كثيرة. اشحن الحساب أو انتظر شوي.';
+  return 'صار خطأ من OpenAI (' + status + '). ' + body.slice(0, 120);
+}
+async function draft(){
+  const key = store.get('openai', ''), model = store.get('em_model', 'gpt-4o');
+  const out = $('out');
+  if(!key){ out.innerHTML = '<p class="err">ما لقيت مفتاح OpenAI. افتح <a href="./">مترجم الاجتماع</a> ← الإعدادات وحطه، وارجع هنا.</p>'; return }
+  const text = $('msg').value.trim();
+  if(mode === 'shot' && !imageData){ out.innerHTML = '<p class="err">اختر صورة الشاشة أول.</p>'; return }
+  if(mode === 'text' && !text){ out.innerHTML = '<p class="err">الصق الرسالة أول.</p>'; return }
+
+  const samples = store.get('wa_samples', ''), notes = store.get('wa_notes', '');
+  const who = $('who').value.trim(), idea = $('idea').value.trim();
+  const system =
+    'You draft WhatsApp replies for a Saudi employee named Yousef, to send to his colleagues and managers. ' +
+    'Write exactly like him: his length, tone, greetings and emoji habits, based on his own sample messages, in the language requested below (his Saudi dialect when Arabic). ' +
+    'If there are no samples, use short, polite, natural Saudi Arabic. ' +
+    'Never invent facts, times, numbers or promises he did not give; if the reply needs a detail you do not know, keep it general or leave a short [ ] placeholder. ' +
+    'If he says what he wants to say, follow that exactly and only phrase it in his style. ' +
+    'For a screenshot: his own messages are on the right (usually green); reply to the person he names, otherwise to the latest message that is not his. ' +
+    'First work out exactly what the other person is asking, so the reply answers that and nothing else. ' +
+    'Saudi workplace WhatsApp style: short and direct, one line usually, natural phrases like "أبشر"، "إن شاء الله"، "تم"، "الله يعطيك العافية". No formal email language, no long greetings. ' +
+    'Give 3 options that differ in what they say (for example: agree, ask a short question, or ask for time). ' +
+    'Answer ONLY with JSON: {"context":"one short Arabic line: who said what and what they want","replies":[{"tag":"short Arabic label","text":"the reply","ar":"if the reply is not Arabic: its meaning in Arabic; otherwise empty"}]}';
+  let userText = '';
+  if(samples) userText += 'His sample messages:\n' + samples + '\n\n';
+  if(notes) userText += 'Notes about his style: ' + notes + '\n\n';
+  if(who) userText += 'Reply to: ' + who + '\n';
+  if(idea) userText += 'What he wants to say: ' + idea + '\n';
+  userText += lang === 'en' ? 'Write the replies in English (natural, professional WhatsApp English that still sounds like him; the "tag" stays Arabic).\n'
+            : lang === 'ar' ? 'Write the replies in Arabic, in his dialect.\n'
+            : 'Write the replies in the same language as the message he is replying to: English message -> English reply, Arabic message -> Arabic reply in his dialect. The "tag" stays Arabic.\n';
+  userText += mode === 'text' ? '\nThe message he received:\n' + text : '\nThe chat is in the attached screenshot.';
+  const content = mode === 'shot'
+    ? [{type:'text', text:userText}, {type:'image_url', image_url:{url:imageData}}]
+    : userText;
+
+  const btn = $('go'); btn.disabled = true; btn.textContent = 'يكتب الردود…';
+  out.innerHTML = '';
+  try{
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST', headers:{Authorization:'Bearer ' + key, 'Content-Type':'application/json'},
+      body: JSON.stringify({model, temperature:0.6, response_format:{type:'json_object'}, messages:[{role:'system',content:system},{role:'user',content}]})
+    });
+    const t = await r.text();
+    if(!r.ok) throw new Error(friendly(r.status, t));
+    const data = JSON.parse(JSON.parse(t).choices[0].message.content);
+    render(data);
+  }catch(e){ out.innerHTML = '<p class="err">' + esc(e.message) + '</p>' }
+  finally{ btn.disabled = false; btn.textContent = 'اكتب لي الرد بأسلوبي' }
+}
+async function refine(r, instruction, card){
+  const btn = card.querySelector('.rf'); btn.disabled = true; btn.textContent = 'يعدّل…';
+  try{
+    const key = store.get('openai', '');
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST', headers:{Authorization:'Bearer ' + key, 'Content-Type':'application/json'},
+      body: JSON.stringify({model:store.get('em_model','gpt-4o'), temperature:0.3, response_format:{type:'json_object'}, messages:[
+        {role:'system', content:'You edit one WhatsApp work reply for Yousef, a Saudi employee. Apply his instruction exactly, keep his short Saudi WhatsApp style. Answer ONLY with JSON: {"text":"...","ar":"if not Arabic: its meaning in Arabic; otherwise empty"}'},
+        {role:'user', content:'Current reply:\n' + r.text + '\n\nHis instruction: ' + instruction}]})
+    });
+    const t = await res.text();
+    if(!res.ok) throw new Error(friendly(res.status, t));
+    const j = JSON.parse(JSON.parse(t).choices[0].message.content);
+    r.text = j.text || r.text; r.ar = j.ar || '';
+    fillCard(card, r); card.querySelector('.rfi').value = '';
+  }catch(e){ toast(e.message) }
+  finally{ btn.disabled = false; btn.textContent = 'عدّل' }
+}
+function fillCard(card, r){
+  card.querySelector('.txt').textContent = r.text;
+  const m = card.querySelector('.meaning'); m.textContent = r.ar ? 'المعنى: ' + r.ar : ''; m.hidden = !r.ar;
+  card.querySelector('a').href = waLink(r.text, $('phone').value);
+}
+function render(data){
+  const out = $('out'); out.innerHTML = '';
+  if(data.context){ const p = document.createElement('p'); p.className = 'context'; p.textContent = 'ترد على: ' + data.context; out.appendChild(p) }
+  (data.replies || []).slice(0, 3).forEach(r => {
+    const card = document.createElement('div'); card.className = 'reply';
+    card.innerHTML = '<span class="tag">' + esc(r.tag || '') + '</span><p class="txt" dir="auto"></p><p class="meaning" hidden></p>' +
+      '<div class="acts"><button class="cp">نسخ</button><a target="_blank" rel="noopener">أرسل في واتساب</a></div>' +
+      '<form class="refine"><input class="rfi" type="text" placeholder="عدّل: اختصر، خلّه أرسم، ضيف…"><button class="rf">عدّل</button></form>' +
+      '<div class="quick-edits"><button type="button" data-i="اختصره">اختصر</button><button type="button" data-i="خلّه أرسم">أرسم</button><button type="button" data-i="ترجمه للإنجليزي">English</button><button type="button" data-i="ترجمه للعربي">عربي</button></div>';
+    fillCard(card, r);
+    card.querySelector('.cp').onclick = () => copy(r.text);
+    card.querySelector('.refine').onsubmit = e => { e.preventDefault(); const v = card.querySelector('.rfi').value.trim(); if(v) refine(r, v, card) };
+    card.querySelectorAll('.quick-edits button').forEach(b => b.onclick = () => refine(r, b.dataset.i, card));
+    out.appendChild(card);
+  });
+  const h = document.createElement('p'); h.className = 'hint';
+  h.textContent = 'في القروب: اضغط نسخ، واسحب رسالة الشخص لليمين، والصق. وفي الخاص: اضغط أرسل في واتساب.';
+  out.appendChild(h);
+  out.firstElementChild?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+$('go').onclick = draft;
+</script>
+</body>
+</html>
