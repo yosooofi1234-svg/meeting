@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>رد الإيميل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: one phone column — input card (text or screenshot), options, then reply cards with copy / open in mail */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --line:#d9dee4; --fg:#151a20; --muted:#5d6874;
+  --accent:#0f6e6a; --accent-fg:#ffffff; --accent-soft:#dff0ee;
+  --wa:#1f8a4c; --wa-soft:#e2f4e9; --err:#b91c1c; --err-soft:#fde8e8;
+  --f-ar:"IBM Plex Sans Arabic",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1316; --surface:#171d21; --line:#283139; --fg:#e7ecef; --muted:#93a0aa;
+  --accent:#3fb8ae; --accent-fg:#06201e; --accent-soft:#16302e;
+  --wa:#4ade80; --wa-soft:#15291d; --err:#f87171; --err-soft:#3a1a1a; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 var(--f-ar);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px 0}
+h1{font-size:18px;font-weight:600;margin:0}
+a{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.tabs{display:flex;gap:6px;background:var(--bg);border-radius:10px;padding:4px}
+.tabs button{flex:1;border:0;background:transparent;padding:8px;border-radius:8px;font-weight:500;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+button{font:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;background:var(--surface);color:var(--fg)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.55}
+label{font-size:13px;color:var(--muted)}
+textarea,input[type=text],input[type=tel],input[type=email]{width:100%;font:inherit;padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+textarea{min-height:88px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:4px}
+.pick{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:18px;color:var(--muted);text-align:center;cursor:pointer}
+.pick img{max-width:100%;max-height:260px;border-radius:8px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.context{font-size:13px;color:var(--muted);background:var(--accent-soft);border-radius:10px;padding:8px 10px;margin:0}
+.reply{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.reply .tag{font-size:11.5px;color:var(--muted)}
+.reply p{margin:0;font-size:16px;white-space:pre-wrap}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button,.acts a{font-size:13px;padding:7px 12px}
+.acts a{display:inline-flex;align-items:center;border-radius:10px;text-decoration:none;background:var(--wa-soft);color:var(--wa);border:1px solid transparent;font-weight:500}
+.err{background:var(--err-soft);color:var(--err);border-radius:10px;padding:9px 11px;font-size:14px;margin:0}
+details summary{cursor:pointer;font-weight:500}
+details[open] summary{margin-bottom:8px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px}
+.subj{font-weight:600;font-size:15px}
+.reply p.body{font-size:15px;line-height:1.75}
+.understand{background:var(--accent-soft);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.understand p,.understand ul{margin:0}
+.understand ul{padding-inline-start:20px}
+.u-title{font-weight:600;font-size:15px;margin:0}
+.u-sum{font-size:15.5px;line-height:1.8}
+.u-row{font-size:14px}
+.u-tone{color:var(--muted)}
+.meaning{font-size:13px;color:var(--muted);background:var(--bg);border-radius:8px;padding:7px 9px;margin:0}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>رد الإيميل</h1>
+    <span style="display:flex;gap:12px"><a href="whatsapp.html">رد واتساب</a><a href="./">المترجم</a></span>
+  </header>
+
+  <section class="card">
+    <div class="tabs" role="tablist">
+      <button id="tabText" role="tab" aria-selected="true">نسخ الإيميل</button>
+      <button id="tabShot" role="tab" aria-selected="false">صورة شاشة</button>
+      <button id="tabNew" role="tab" aria-selected="false">إيميل جديد</button>
+    </div>
+
+    <div id="paneText" class="field">
+      <label for="msg">الإيميل اللي جاك</label>
+      <textarea id="msg" style="min-height:120px" placeholder="الصق نص الإيميل هنا"></textarea>
+    </div>
+
+    <div id="paneShot" hidden>
+      <label class="pick" for="file">
+        <span id="pickText">اضغط واختر صورة شاشة الإيميل</span>
+        <img id="preview" alt="صورة الإيميل" hidden>
+      </label>
+      <input id="file" type="file" accept="image/*" hidden>
+    </div>
+
+    <div class="field">
+      <label for="idea" id="ideaLabel">وش تبي تقول؟ (اختياري)</label>
+      <input id="idea" type="text" placeholder="مثل: وافق واطلب موعد الأحد، أو اعتذر بلطف">
+    </div>
+    <div class="field">
+      <label for="to">إيميل المستلم (اختياري)</label>
+      <input id="to" type="email" dir="ltr" placeholder="name@company.com">
+    </div>
+
+    <div class="field">
+      <span style="font-size:13px;color:var(--muted)">لغة الرد</span>
+      <div class="tabs" id="langs">
+        <button data-lang="auto" aria-selected="true">نفس لغة الإيميل</button>
+        <button data-lang="ar" aria-selected="false">عربي</button>
+        <button data-lang="en" aria-selected="false">English</button>
+      </div>
+    </div>
+    <div class="field">
+      <span style="font-size:13px;color:var(--muted)">الأسلوب</span>
+      <div class="tabs" id="tones">
+        <button data-tone="formal" aria-selected="true">رسمي</button>
+        <button data-tone="friendly" aria-selected="false">رسمي ودّي</button>
+        <button data-tone="short" aria-selected="false">مختصر جدًا</button>
+      </div>
+    </div>
+
+    <button id="go" class="primary">اكتب لي الإيميل بأسلوبي</button>
+  </section>
+
+  <div id="out" style="display:flex;flex-direction:column;gap:10px"></div>
+
+  <details class="card" id="styleBox">
+    <summary>أسلوبي في الإيميلات</summary>
+    <div class="field">
+      <label for="name">اسمك ومنصبك للتوقيع</label>
+      <textarea id="name" style="min-height:70px" placeholder="يوسف البيشي&#10;مهندس كهربائي"></textarea>
+    </div>
+    <div class="field">
+      <label for="samples">الصق هنا 3 إلى 5 إيميلات كتبتها أنت (افصل بينها بسطر فيه ---)</label>
+      <textarea id="samples" style="min-height:150px"></textarea>
+    </div>
+    <button id="saveStyle">احفظ أسلوبي</button>
+    <p class="hint">يتحفظ في جوالك بس. وقبل ما تلصق النماذج، احذف منها أي أرقام أو معلومات سرية.</p>
+  </details>
+</main>
+<div id="toast" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('mt_'+k); return v===null? d : v }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem('mt_'+k, v) }catch(e){} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2200) }
+
+/* ---------- Tabs ---------- */
+let mode = 'text';
+function setMode(m){
+  mode = m;
+  $('tabText').setAttribute('aria-selected', m === 'text');
+  $('tabShot').setAttribute('aria-selected', m === 'shot');
+  $('tabNew').setAttribute('aria-selected', m === 'new');
+  $('paneText').hidden = m !== 'text';
+  $('paneShot').hidden = m !== 'shot';
+  $('ideaLabel').textContent = m === 'new' ? 'وش موضوع الإيميل؟' : 'وش تبي تقول؟ (اختياري)';
+  $('idea').placeholder = m === 'new' ? 'مثل: أطلب إجازة يومين الأسبوع الجاي' : 'مثل: وافق واطلب موعد الأحد، أو اعتذر بلطف';
+}
+$('tabText').onclick = () => setMode('text');
+$('tabShot').onclick = () => setMode('shot');
+$('tabNew').onclick = () => setMode('new');
+
+function pickGroup(id, attr, key, def){
+  let v = store.get(key, def);
+  const set = x => { v = x; store.set(key, x); document.querySelectorAll('#'+id+' button').forEach(b => b.setAttribute('aria-selected', b.dataset[attr] === x)) };
+  document.querySelectorAll('#'+id+' button').forEach(b => b.onclick = () => set(b.dataset[attr]));
+  set(v);
+  return () => v;
+}
+const getLang = pickGroup('langs', 'lang', 'em_lang', 'auto');
+const getTone = pickGroup('tones', 'tone', 'em_tone', 'formal');
+
+/* ---------- Screenshot ---------- */
+let imageData = null;
+$('file').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const max = 1600, s = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    imageData = c.toDataURL('image/jpeg', 0.85);
+    $('preview').src = imageData; $('preview').hidden = false; $('pickText').textContent = 'اضغط لتغيير الصورة';
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+};
+
+/* ---------- Style ---------- */
+$('name').value = store.get('em_name', '');
+$('samples').value = store.get('em_samples', '');
+if(!store.get('em_name', '')) $('styleBox').open = true;
+$('saveStyle').onclick = () => { store.set('em_name', $('name').value.trim()); store.set('em_samples', $('samples').value.trim()); toast('انحفظ أسلوبك') };
+
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); toast('انسخ') }
+  catch(e){
+    const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); toast('انسخ') }catch(_){ toast('حدد النص وانسخه بنفسك') }
+    t.remove();
+  }
+}
+const mailLink = (to, subject, body) => 'mailto:' + encodeURIComponent(to || '') + '?subject=' + encodeURIComponent(subject || '') + '&body=' + encodeURIComponent(body || '');
+
+/* ---------- Ask OpenAI ---------- */
+function friendly(status, body){
+  if(status === 401) return 'مفتاح OpenAI غلط أو مو محفوظ. افتح مترجم الاجتماع ← الإعدادات وتأكد منه.';
+  if(status === 429 || /quota|billing/i.test(body)) return 'رصيد OpenAI خلص أو الطلبات كثيرة. اشحن الحساب أو انتظر شوي.';
+  return 'صار خطأ من OpenAI (' + status + '). ' + body.slice(0, 120);
+}
+async function draft(){
+  const key = store.get('openai', ''), model = store.get('chat', 'gpt-4o-mini'), out = $('out');
+  if(!key){ out.innerHTML = '<p class="err">ما لقيت مفتاح OpenAI. افتح <a href="./">مترجم الاجتماع</a> ← الإعدادات وحطه، وارجع هنا.</p>'; return }
+  const text = $('msg').value.trim(), idea = $('idea').value.trim();
+  if(mode === 'text' && !text){ out.innerHTML = '<p class="err">الصق الإيميل أول.</p>'; return }
+  if(mode === 'shot' && !imageData){ out.innerHTML = '<p class="err">اختر صورة الإيميل أول.</p>'; return }
+  if(mode === 'new' && !idea){ out.innerHTML = '<p class="err">اكتب موضوع الإيميل أول.</p>'; return }
+
+  const name = store.get('em_name', ''), samples = store.get('em_samples', ''), lang = getLang(), tone = getTone();
+  const system =
+    'You write work emails for a Saudi engineer, to colleagues, managers and other departments. ' +
+    'Match his own writing style from his sample emails when given: his greetings, closings, sentence length and level of formality. ' +
+    'Never invent facts, dates, numbers, names or commitments he did not give; where a detail is needed, leave a short placeholder in square brackets like [التاريخ] or [date]. ' +
+    'If he says what he wants to say, follow it exactly and only phrase it well. ' +
+    'For a screenshot, read the email in the image and reply to its sender. ' +
+    'Give 3 options that differ in approach (for example: direct, more detailed, or asking a clarifying question). ' +
+    'Each option has a subject (for a reply use "Re: " plus the original subject when you can see it, or "رد: " in Arabic) and a full body with greeting and his signature at the end. ' +
+    'First help him UNDERSTAND the email (it may be in English he does not read well): explain it in simple Saudi-friendly Arabic. ' +
+    'Answer ONLY with JSON: {"understand":{"from":"who wrote it (Arabic, short)","summary":"2-3 simple Arabic sentences explaining what the email says","asks":["each thing they want from him, in Arabic"],"deadline":"any date or deadline mentioned, in Arabic, or empty","tone":"one Arabic word or two: e.g. عادي، مستعجل، فيه انزعاج"},' +
+    '"replies":[{"tag":"short Arabic label","subject":"...","body":"...","ar":"if the body is not Arabic: its meaning in simple Arabic; otherwise empty"}]}. ' +
+    'For a NEW email, set understand.summary to a one-line Arabic description of the email you wrote and leave the other understand fields empty.';
+  let u = '';
+  if(name) u += 'His signature:\n' + name + '\n\n';
+  if(samples) u += 'His sample emails:\n' + samples + '\n\n';
+  u += 'Tone: ' + ({formal:'formal and respectful', friendly:'formal but warm and friendly', short:'very short and to the point, still polite'})[tone] + '\n';
+  u += lang === 'en' ? 'Write in English.\n' : lang === 'ar' ? 'Write in formal Arabic suitable for work email.\n'
+     : (mode === 'new' ? 'Write in Arabic unless the topic is written in English.\n' : 'Write in the same language as the email he received.\n');
+  if(mode === 'new') u += '\nWrite a NEW email about: ' + idea;
+  else {
+    if(idea) u += 'What he wants to say: ' + idea + '\n';
+    u += mode === 'text' ? '\nThe email he received:\n' + text : '\nThe email is in the attached screenshot.';
+  }
+  const content = mode === 'shot' ? [{type:'text', text:u}, {type:'image_url', image_url:{url:imageData}}] : u;
+
+  const btn = $('go'); btn.disabled = true; btn.textContent = 'يكتب الإيميل…'; out.innerHTML = '';
+  try{
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST', headers:{Authorization:'Bearer ' + key, 'Content-Type':'application/json'},
+      body: JSON.stringify({model, temperature:0.5, response_format:{type:'json_object'}, messages:[{role:'system',content:system},{role:'user',content}]})
+    });
+    const t = await r.text();
+    if(!r.ok) throw new Error(friendly(r.status, t));
+    render(JSON.parse(JSON.parse(t).choices[0].message.content));
+  }catch(e){ out.innerHTML = '<p class="err">' + esc(e.message) + '</p>' }
+  finally{ btn.disabled = false; btn.textContent = 'اكتب لي الإيميل بأسلوبي' }
+}
+function render(data){
+  const out = $('out'); out.innerHTML = '';
+  const u = data.understand || {};
+  if(u.summary){
+    const box = document.createElement('div'); box.className = 'understand';
+    let h = '<p class="u-title">وش يقول الإيميل؟</p>';
+    if(u.from) h += '<p class="u-row"><b>من:</b> ' + esc(u.from) + (u.tone ? ' · <span class="u-tone">' + esc(u.tone) + '</span>' : '') + '</p>';
+    h += '<p class="u-sum">' + esc(u.summary) + '</p>';
+    if(u.asks && u.asks.length) h += '<p class="u-row"><b>المطلوب منك:</b></p><ul>' + u.asks.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul>';
+    if(u.deadline) h += '<p class="u-row"><b>الموعد:</b> ' + esc(u.deadline) + '</p>';
+    box.innerHTML = h; out.appendChild(box);
+    const t = document.createElement('p'); t.className = 'u-title'; t.style.margin = '6px 0 0'; t.textContent = 'ردود مقترحة'; out.appendChild(t);
+  }
+  const to = $('to').value.trim();
+  (data.replies || []).slice(0, 3).forEach(r => {
+    const card = document.createElement('div'); card.className = 'reply';
+    card.innerHTML = '<span class="tag"></span><p class="subj" dir="auto"></p><p class="body" dir="auto"></p>' +
+      '<div class="acts"><button class="cb">نسخ النص</button><button class="cs">نسخ العنوان</button><a>افتح في الإيميل</a></div>';
+    card.querySelector('.tag').textContent = r.tag || '';
+    card.querySelector('.subj').textContent = r.subject || '';
+    card.querySelector('.body').textContent = r.body || '';
+    if(r.ar){ const m = document.createElement('p'); m.className = 'meaning'; m.textContent = 'المعنى: ' + r.ar; card.querySelector('.body').after(m) }
+    card.querySelector('.cb').onclick = () => copy(r.body || '');
+    card.querySelector('.cs').onclick = () => copy(r.subject || '');
+    card.querySelector('a').href = mailLink(to, r.subject, r.body);
+    out.appendChild(card);
+  });
+  const h = document.createElement('p'); h.className = 'hint';
+  h.textContent = 'للرد على إيميل: افتح الإيميل في Outlook واضغط Reply، والصق النص، عشان يبقى في نفس السلسلة. وللإيميل الجديد: اضغط افتح في الإيميل.';
+  out.appendChild(h);
+  out.firstElementChild?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+$('go').onclick = draft;
+</script>
+</body>
+</html>
